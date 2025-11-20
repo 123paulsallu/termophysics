@@ -1,5 +1,6 @@
 <?php
 session_start();
+// Only allow access if user is admin and credentials match
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../index.php');
     exit();
@@ -7,6 +8,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 include '../config.php';
 
 // Get statistics
+// Double check credentials in DB for admin
+$user_id = intval($_SESSION['user_id']);
+$result = $conn->query("SELECT id, username, role FROM users WHERE id = $user_id AND role = 'admin'");
+if (!$result || $result->num_rows === 0) {
+    // Not a valid admin
+    header('Location: ../index.php');
+    exit();
+}
 $user_count = $conn->query("SELECT COUNT(*) as count FROM users")->fetch_assoc()['count'];
 $category_count = $conn->query("SELECT COUNT(*) as count FROM vocabulary_categories")->fetch_assoc()['count'];
 $term_count = $conn->query("SELECT COUNT(*) as count FROM terms")->fetch_assoc()['count'];
@@ -30,6 +39,8 @@ $conn->close();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap 4 -->
@@ -76,37 +87,76 @@ $conn->close();
         </ul>
     </nav>
 
-    <!-- Sidebar -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <a href="#" class="brand-link">
-            <img src="../styles/logo.png" alt="Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-            <span class="brand-text font-weight-light">TermoPhysics</span>
-        </a>
-        <div class="sidebar">
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                    <li class="nav-item">
-                        <a href="dashboard.php" class="nav-link active">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
-                            <p>Dashboard</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="users.php" class="nav-link">
-                            <i class="nav-icon fas fa-users"></i>
-                            <p>Users</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="settings.php" class="nav-link">
-                            <i class="nav-icon fas fa-cogs"></i>
-                            <p>Settings</p>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </aside>
+     <!-- Sidebar -->
+     <aside class="main-sidebar sidebar-dark-primary elevation-4">
+         <a href="#" class="brand-link">
+             <img src="../styles/logo.png" alt="Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+             <span class="brand-text font-weight-light">TermoPhysics</span>
+         </a>
+         <div class="sidebar-user-panel text-center py-3" style="background:#003366;color:#BD8C2A;">
+             <div style="font-size:1.1em;font-weight:bold;"><?php echo htmlspecialchars($_SESSION['username']); ?></div>
+             <div style="font-size:0.95em;">Role: <?php echo htmlspecialchars($_SESSION['role']); ?></div>
+         </div>
+         <div class="sidebar">
+             <nav class="mt-2">
+                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                     <li class="nav-item">
+                         <a href="dashboard.php" class="nav-link active">
+                             <i class="nav-icon fas fa-tachometer-alt"></i>
+                             <p>Dashboard</p>
+                         </a>
+                     </li>
+                     <li class="nav-item">
+                         <a href="users.php" class="nav-link">
+                             <i class="nav-icon fas fa-users"></i>
+                             <p>Users</p>
+                         </a>
+                     </li>
+                     <li class="nav-item has-treeview">
+                         <a href="#" class="nav-link">
+                             <i class="nav-icon fas fa-atom"></i>
+                             <p>
+                                 Physics Terms
+                                 <i class="right fas fa-angle-left"></i>
+                             </p>
+                         </a>
+                         <ul class="nav nav-treeview" style="margin-left:20px;">
+                             <li class="nav-item">
+                                 <a href="vocabulary_categories.php" class="nav-link">
+                                     <span class="material-icons nav-icon" style="vertical-align:middle;">category</span>
+                                     <p style="display:inline; margin-left:8px;">Categories</p>
+                                 </a>
+                             </li>
+                             <li class="nav-item">
+                                 <a href="videos.php" class="nav-link">
+                                     <span class="material-icons nav-icon" style="vertical-align:middle;">video_library</span>
+                                     <p style="display:inline; margin-left:8px;">Videos</p>
+                                 </a>
+                             </li>
+                             <li class="nav-item">
+                                 <a href="photos.php" class="nav-link">
+                                     <span class="material-icons nav-icon" style="vertical-align:middle;">photo_library</span>
+                                     <p style="display:inline; margin-left:8px;">Photos</p>
+                                 </a>
+                             </li>
+                             <li class="nav-item">
+                                 <a href="terms.php" class="nav-link">
+                                     <span class="material-icons nav-icon" style="vertical-align:middle;">description</span>
+                                     <p style="display:inline; margin-left:8px;">Terms</p>
+                                 </a>
+                             </li>
+                         </ul>
+                     </li>
+                     <li class="nav-item">
+                         <a href="settings.php" class="nav-link">
+                             <i class="nav-icon fas fa-cogs"></i>
+                             <p>Settings</p>
+                         </a>
+                     </li>
+                 </ul>
+             </nav>
+         </div>
+     </aside>
 
     <!-- Content -->
     <div class="content-wrapper">
