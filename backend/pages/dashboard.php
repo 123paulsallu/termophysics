@@ -5,29 +5,206 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 include '../config.php';
+
+// Get statistics
+$user_count = $conn->query("SELECT COUNT(*) as count FROM users")->fetch_assoc()['count'];
+$category_count = $conn->query("SELECT COUNT(*) as count FROM vocabulary_categories")->fetch_assoc()['count'];
+$term_count = $conn->query("SELECT COUNT(*) as count FROM terms")->fetch_assoc()['count'];
+$video_count = $conn->query("SELECT COUNT(*) as count FROM videos")->fetch_assoc()['count'];
+$photo_count = $conn->query("SELECT COUNT(*) as count FROM photos")->fetch_assoc()['count'];
+$log_count = $conn->query("SELECT COUNT(*) as count FROM audit_log")->fetch_assoc()['count'];
+
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <link rel="icon" type="image/png" href="../styles/logo.png">
+    <title>Admin Dashboard - TermoPhysics</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Italiana&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/quicksand.css"> <!-- Assuming you have a CSS file for Quicksand -->
+    <!-- AdminLTE CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script>
+        document.getElementById('toggle-mode').addEventListener('click', function() {
+            document.body.classList.toggle('light-mode');
+        });
+    </script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; }
-        .sidebar { width: 200px; background: #333; color: white; padding: 20px; height: 100vh; }
-        .sidebar h2 { margin-top: 0; }
-        .sidebar ul { list-style: none; padding: 0; }
-        .sidebar li { margin: 10px 0; }
-        .sidebar a { color: white; text-decoration: none; }
-        .content { flex: 1; padding: 20px; }
+        body { font-family: 'Quicksand', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Italiana', serif; }
+        .small-box { transition: transform 0.3s ease; background-color: #BD8C2A !important; color: #003366 !important; }
+        .small-box:hover { transform: scale(1.05); }
+        .sidebar-dark-primary { background-color: #003366 !important; }
+        .brand-link { background-color: #003366 !important; }
+        .nav-link { color: #BD8C2A !important; }
+        .nav-link:hover { background-color: #BD8C2A !important; color: #003366 !important; }
+        .light-mode { background-color: #f8f9fa; color: #003366; }
+        .light-mode .small-box { background-color: #BD8C2A !important; color: #003366 !important; }
+        .light-mode .sidebar-dark-primary { background-color: #003366 !important; }
+        .light-mode .brand-link { background-color: #003366 !important; }
+        .light-mode .nav-link { color: #BD8C2A !important; }
+        .light-mode .nav-link:hover { background-color: #BD8C2A !important; color: #003366 !important; }
     </style>
 </head>
-<body>
-    <?php include '../components/sidebar.php'; ?>
-    <div class="content">
-        <h1>Admin Dashboard</h1>
-        <p>Welcome, <?php echo $_SESSION['username']; ?>!</p>
-        <!-- Add dashboard content here -->
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+            </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="logout.php">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <a href="#" class="brand-link">
+            <img src="../styles/logo.png" alt="Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+            <span class="brand-text font-weight-light">TermoPhysics</span>
+        </a>
+        <div class="sidebar">
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                    <li class="nav-item">
+                        <a href="dashboard.php" class="nav-link active">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p>Dashboard</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="users.php" class="nav-link">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>Users</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="settings.php" class="nav-link">
+                            <i class="nav-icon fas fa-cogs"></i>
+                            <p>Settings</p>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Content -->
+    <div class="content-wrapper">
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Dashboard</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <section class="content">
+            <div class="container-fluid">
+                <p>Welcome, <?php echo $_SESSION['username']; ?>!</p>
+                <!-- Add dashboard widgets here -->
+                <div class="row">
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-info">
+                            <div class="inner">
+                                <h3><?php echo $user_count; ?></h3>
+                                <p>Total Users</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-person-add"></i>
+                            </div>
+                            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-success">
+                            <div class="inner">
+                                <h3><?php echo $category_count; ?></h3>
+                                <p>Total Vocabulary Categories</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-stats-bars"></i>
+                            </div>
+                            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-warning">
+                            <div class="inner">
+                                <h3><?php echo $term_count; ?></h3>
+                                <p>Total Terms</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-document-text"></i>
+                            </div>
+                            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-danger">
+                            <div class="inner">
+                                <h3><?php echo $video_count; ?></h3>
+                                <p>Total Videos</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-videocamera"></i>
+                            </div>
+                            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-primary">
+                            <div class="inner">
+                                <h3><?php echo $photo_count; ?></h3>
+                                <p>Audit Total Photos</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-images"></i>
+                            </div>
+                            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-secondary">
+                            <div class="inner">
+                                <h3><?php echo $log_count; ?></h3>
+                                <p>Audit Logs</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-clipboard"></i>
+                            </div>
+                            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <strong>Copyright &copy; 2025 TermoPhysics.</strong> All rights reserved.
+    </footer>
+</div>
 </body>
 </html>
