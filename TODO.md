@@ -1,0 +1,5 @@
+- [x] Remove .card CSS styles from the style block
+- [x] Remove the <div class="card"> wrapper around the form in HTML
+- [x] Change .container to flex layout with logo/title on left and form on right
+- [x] Increase logo size to 200px
+- [x] Adjust mobile responsiveness if needed
