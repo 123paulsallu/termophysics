@@ -148,23 +148,12 @@ include '../config.php';
 // Handle Add Video
 if (isset($_POST['addVideo'])) {
     $title = trim($_POST['videoTitle']);
+    $url = trim($_POST['videoUrl']);
     $category_id = intval($_POST['videoCategory']);
     $term_id = intval($_POST['videoTerm']);
-    $file_path = '';
-    if (isset($_FILES['videoFile']) && $_FILES['videoFile']['error'] == UPLOAD_ERR_OK) {
-        $uploadDir = '../uploads/videos/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-        $fileName = basename($_FILES['videoFile']['name']);
-        $targetFile = $uploadDir . time() . '_' . $fileName;
-        if (move_uploaded_file($_FILES['videoFile']['tmp_name'], $targetFile)) {
-            $file_path = $targetFile;
-        }
-    }
-    if ($title !== '' && $file_path !== '') {
-        $stmt = $conn->prepare("INSERT INTO videos (title, file_path, category_id, term_id) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssii", $title, $file_path, $category_id, $term_id);
+    if ($title !== '' && $url !== '') {
+        $stmt = $conn->prepare("INSERT INTO videos (title, url, category_id, term_id) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssii", $title, $url, $category_id, $term_id);
         if ($stmt->execute()) {
             echo '<div class="alert alert-success">Video added successfully.</div>';
         } else {
@@ -223,7 +212,7 @@ $terms = $conn->query("SELECT id, term FROM terms ORDER BY term ASC");
         <div class="modal fade" id="addVideoModal" tabindex="-1" role="dialog" aria-labelledby="addVideoModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
-                    <form method="post" action="" enctype="multipart/form-data">
+                    <form method="post" action="">
                         <div class="modal-header">
                             <h5 class="modal-title" id="addVideoModalLabel">Add Video</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -236,8 +225,8 @@ $terms = $conn->query("SELECT id, term FROM terms ORDER BY term ASC");
                                 <input type="text" class="form-control" id="videoTitle" name="videoTitle" required>
                             </div>
                             <div class="form-group">
-                                <label for="videoFile">Video File</label>
-                                <input type="file" class="form-control" id="videoFile" name="videoFile" accept="video/*" required>
+                                <label for="videoUrl">YouTube URL</label>
+                                <input type="url" class="form-control" id="videoUrl" name="videoUrl" placeholder="https://www.youtube.com/watch?v=..." required>
                             </div>
                             <div class="form-group">
                                 <label for="videoCategory">Category</label>
@@ -265,7 +254,7 @@ $terms = $conn->query("SELECT id, term FROM terms ORDER BY term ASC");
 
         <?php
         // Fetch videos
-        $result = $conn->query("SELECT v.id, v.title, v.file_path, v.created_at, c.name as category, t.term as term FROM videos v LEFT JOIN vocabulary_categories c ON v.category_id = c.id LEFT JOIN terms t ON v.term_id = t.id ORDER BY v.created_at DESC");
+        $result = $conn->query("SELECT v.id, v.title, v.url, v.created_at, c.name as category, t.term as term FROM videos v LEFT JOIN vocabulary_categories c ON v.category_id = c.id LEFT JOIN terms t ON v.term_id = t.id ORDER BY v.created_at DESC");
         if ($result && $result->num_rows > 0) {
                 echo '<table class="table table-bordered" style="background:#fff; margin-top:20px;">';
                 echo '<thead><tr><th>ID</th><th>Title</th><th>URL</th><th>Category</th><th>Term</th><th>Created At</th><th>Actions</th></tr></thead><tbody>';
@@ -274,10 +263,27 @@ $terms = $conn->query("SELECT id, term FROM terms ORDER BY term ASC");
                         echo '<td>' . htmlspecialchars($row['id']) . '</td>';
                         echo '<td>' . htmlspecialchars($row['title']) . '</td>';
                         echo '<td>';
-                        if (!empty($row['file_path'])) {
-                            echo '<a href="' . htmlspecialchars($row['file_path']) . '" target="_blank">Download</a>';
+                        if (!empty($row['url'])) {
+                            $rawUrl = $row['url'];
+                            if (strpos($rawUrl, 'youtube.com') !== false || strpos($rawUrl, 'youtu.be') !== false) {
+                                $videoId = '';
+                                if (preg_match('/v=([A-Za-z0-9_-]+)/', $rawUrl, $m)) {
+                                    $videoId = $m[1];
+                                } elseif (preg_match('#youtu\.be/([A-Za-z0-9_-]+)#', $rawUrl, $m)) {
+                                    $videoId = $m[1];
+                                }
+                                if ($videoId !== '') {
+                                    $embed = 'https://www.youtube.com/embed/' . $videoId;
+                                    echo '<a href="' . htmlspecialchars($rawUrl) . '" target="_blank">Watch</a><br>';
+                                    echo '<iframe width="200" height="113" src="' . htmlspecialchars($embed) . '" frameborder="0" allowfullscreen></iframe>';
+                                } else {
+                                    echo '<a href="' . htmlspecialchars($rawUrl) . '" target="_blank">Watch</a>';
+                                }
+                            } else {
+                                echo '<a href="' . htmlspecialchars($rawUrl) . '" target="_blank">Open link</a>';
+                            }
                         } else {
-                            echo 'No file';
+                            echo 'No URL';
                         }
                         echo '</td>';
                         echo '<td>' . htmlspecialchars($row['category']) . '</td>';

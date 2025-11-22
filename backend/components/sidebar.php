@@ -55,6 +55,7 @@
             </ul>
         </li>
         <li><a href="settings.php">Settings</a></li>
+        <li><a href="audit_logs.php">Audit Logs</a></li>
         <li><a href="backend/index.php">Logout</a></li>
     </ul>
     <script>

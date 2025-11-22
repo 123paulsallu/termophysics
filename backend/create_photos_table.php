@@ -9,10 +9,10 @@ $sql = "CREATE TABLE IF NOT EXISTS photos (
     video_id INT,
     term_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES vocabulary_categories(id),
-    FOREIGN KEY (video_id) REFERENCES videos(id),
-    FOREIGN KEY (term_id) REFERENCES terms(id)
-)";
+    FOREIGN KEY (category_id) REFERENCES vocabulary_categories(id) ON DELETE SET NULL,
+    FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE SET NULL,
+    FOREIGN KEY (term_id) REFERENCES terms(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
 if ($conn->query($sql) === TRUE) {
     echo "Table photos created successfully.";

@@ -10,8 +10,8 @@ $sql = "CREATE TABLE IF NOT EXISTS audit_log (
     new_values TEXT,
     user_id INT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-)";
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
 if ($conn->query($sql) === TRUE) {
     echo "Table audit_log created successfully.";

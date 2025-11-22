@@ -140,7 +140,7 @@
         </div>
         <div class="form-section">
             <h2>Login</h2>
-            <form action="dashboard.php" method="post">
+            <form action="login.php" method="post">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" required>
 

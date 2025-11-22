@@ -5,8 +5,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../index.php');
     exit();
 }
-include '../config.php';
-
 // Get statistics
 // Double check credentials in DB for admin
 $user_id = intval($_SESSION['user_id']);
@@ -15,6 +13,17 @@ if (!$result || $result->num_rows === 0) {
     // Not a valid admin
     header('Location: ../index.php');
     exit();
+}
+$user = $result->fetch_assoc();
+
+// Try to fetch profile photo if column exists
+$checkCol = $conn->query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'profile_photo'");
+if ($checkCol && $checkCol->num_rows > 0) {
+    $photoRes = $conn->query("SELECT profile_photo FROM users WHERE id = $user_id");
+    if ($photoRes && $photoRes->num_rows > 0) {
+        $photoData = $photoRes->fetch_assoc();
+        $user['profile_photo'] = $photoData['profile_photo'];
+    }
 }
 $user_count = $conn->query("SELECT COUNT(*) as count FROM users")->fetch_assoc()['count'];
 $category_count = $conn->query("SELECT COUNT(*) as count FROM vocabulary_categories")->fetch_assoc()['count'];
@@ -94,12 +103,47 @@ $conn->close();
              <span class="brand-text font-weight-light">TermoPhysics</span>
          </a>
          <div class="sidebar-user-panel text-center py-3" style="background:#003366;color:#BD8C2A;">
-             <div style="font-size:1.1em;font-weight:bold;"><?php echo htmlspecialchars($_SESSION['username']); ?></div>
-             <div style="font-size:0.95em;">Role: <?php echo htmlspecialchars($_SESSION['role']); ?></div>
+             <?php if (!empty($user['profile_photo']) && file_exists($user['profile_photo'])): ?>
+                 <a href="settings.php"><img src="<?php echo htmlspecialchars($user['profile_photo']); ?>" alt="Profile" style="width:60px; height:60px; border-radius:50%; object-fit:cover; margin-bottom:10px; cursor:pointer;"></a>
+             <?php else: ?>
+                 <a href="settings.php" style="display:block; margin-bottom:10px;">
+                     <div style="width:60px; height:60px; border-radius:50%; background:#BD8C2A; margin:0 auto; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                         <i class="fas fa-user" style="font-size:30px; color:#003366;"></i>
+                     </div>
+                 </a>
+             <?php endif; ?>
+             <div style="font-size:1.1em;font-weight:bold;"><?php echo htmlspecialchars($user['username']); ?></div>
+             <div style="font-size:0.95em;">Role: <?php echo htmlspecialchars($user['role']); ?></div>
          </div>
          <div class="sidebar">
              <nav class="mt-2">
                  <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                 <script>
+                     document.addEventListener('DOMContentLoaded', function() {
+                         var treeviewLinks = document.querySelectorAll('.has-treeview > a');
+                         treeviewLinks.forEach(function(link) {
+                             link.addEventListener('click', function(e) {
+                                 e.preventDefault();
+                                 var parent = link.parentElement;
+                                 parent.classList.toggle('menu-open');
+                                 var submenu = parent.querySelector('.nav-treeview');
+                                 if (submenu) {
+                                     submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+                                 }
+                             });
+                         });
+                         document.querySelectorAll('.has-treeview .nav-link').forEach(function(link) {
+                             if (link.classList.contains('active')) {
+                                 var parent = link.closest('.has-treeview');
+                                 if (parent) {
+                                     parent.classList.add('menu-open');
+                                     var submenu = parent.querySelector('.nav-treeview');
+                                     if (submenu) submenu.style.display = 'block';
+                                 }
+                             }
+                         });
+                     });
+                 </script>
                      <li class="nav-item">
                          <a href="dashboard.php" class="nav-link active">
                              <i class="nav-icon fas fa-tachometer-alt"></i>
